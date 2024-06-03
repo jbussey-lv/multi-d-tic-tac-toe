@@ -27,11 +27,21 @@ class Board:
     self.board[*move] = player
 
   def get_lines(self):
+    lines = np.array([])
+    dim_vals_full = [range(dim) for dim in self.board.shape]
+    for zero_dim in range(self.board.ndim):
+      dim_vals = dim_vals_full.copy()
+      dim_vals[zero_dim] = [0]
+      all_inds = np.array(list(product(*dim_vals)))
+      lines = np.append(lines, all_inds)
+    return lines
+
+
+  def get_starts(self):
     dim_vals = [range(dim) for dim in self.board.shape]
     all_inds = np.array(list(product(*dim_vals)))
     start_inds = np.array([ind for ind in all_inds if 0 in ind])
-    print(all_inds)
-    print(start_inds)
+    return start_inds
 
 
   
@@ -54,7 +64,7 @@ class Board:
 
 
 
-board = Board([2,3,4], 4)
+board = Board([2,3], 4)
 
 # board.add_move([1,2,3], 'X')
 # board.add_move([2,3,4], 'Y')
