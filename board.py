@@ -1,5 +1,6 @@
 from typing import List
 import itertools
+from itertools import product
 import numpy as np
 
 class Board:
@@ -21,20 +22,18 @@ class Board:
     
   def __str__(self) -> str:
     return str(self.board)
-
-  def iterate_lines(self):
-    for axis in range(len(self.board.shape)):
-      for line in self.board:
-        yield line
-      for line in self.board.T:
-        yield line
-      for line in itertools.chain(
-        [self.board.diagonal(i) for i in range(-self.board.shape[0]+1, self.board.shape[1])],
-        [self.board[:, ::-1].diagonal(i) for i in range(-self.board.shape[0]+1, self.board.shape[1])]):
-        yield line
   
   def add_move(self, move: List[int], player: int) -> None:
     self.board[*move] = player
+
+  def get_lines(self):
+    dim_vals = [range(dim) for dim in self.board.shape]
+    all_inds = np.array(list(product(*dim_vals)))
+    start_inds = np.array([ind for ind in all_inds if 0 in ind])
+    print(all_inds)
+    print(start_inds)
+
+
   
   def check_line_win(self, line: List[int]) -> int|None:
     if len(line) < self.win_length:
@@ -55,14 +54,12 @@ class Board:
 
 
 
-board = Board([3,4,5], 4)
+board = Board([2,3,4], 4)
 
-board.add_move([1,2,3], 'X')
-board.add_move([2,3,4], 'Y')
-board.add_move([1,0,0], 'X')
-
+# board.add_move([1,2,3], 'X')
+# board.add_move([2,3,4], 'Y')
+# board.add_move([1,0,0], 'X')
 print(board)
-for line in board.iterate_lines():
-  print(line)
+board.get_lines()
 
   
