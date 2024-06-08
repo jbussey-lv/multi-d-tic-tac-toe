@@ -43,13 +43,6 @@ class Board:
     return np.array(lines)
 
 
-  def get_starts(self):
-    dim_vals = [range(dim) for dim in self.board.shape]
-    all_inds = list(product(*dim_vals))
-    start_inds = sorted([ind for ind in all_inds if 0 in ind])
-    return start_inds
-
-
   
   def check_line_win(self, line: List[int]) -> int|None:
     if len(line) < self.win_length:
@@ -104,15 +97,17 @@ def is_start(point: tuple[int], shape: tuple[int]):
   return False
 
 def build_line(shape: tuple[int], start: tuple[int], diffs: tuple[int]):
-  point = start
+  shape = np.array(shape)
+  point = np.array(start)
   line = []
-  while point < shape:
-    line.append(point)
-    point = tuple(np.add(point, diffs))
+  # while the point is within the bounds of the shape
+  while (point >= 0).all() and (point < shape).all():
+    line.append(tuple(point))
+    point = np.array(np.add(point, diffs))
   return sorted(line)
   
   
 def get_diffs(shape: tuple[int]) -> tuple[tuple[int]]:
   all_diffs = [(-1,0,1)]*len(shape)
-  full_zero = tuple([0]*len(shape))
+  full_zero = (0,)*len(shape)
   return tuple([diff for diff in all_diffs if diff != full_zero])

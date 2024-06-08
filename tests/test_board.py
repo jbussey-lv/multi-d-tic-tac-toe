@@ -25,3 +25,19 @@ def test_get_start_points_3d():
               (2,3,0), (2,3,1), (2,3,2)
               ]
    assert returned == correct
+
+
+def test_build_line_straight():
+   returned = board.build_line((3,3), (0,0), (0,1))
+   correct = [(0,0), (0,1), (0,2)]
+   assert returned == correct
+
+def test_build_line_2d_diag():
+   returned = board.build_line((3,3), (0,0), (1,1))
+   correct = [(0,0), (1,1), (2,2)]
+   assert returned == correct
+
+def test_build_line_3d_diag():
+   returned = board.build_line((3,3,4), (2,2,3), (-1,-1,-1))
+   correct = [(0,0,1), (1,1,2), (2,2,3)]
+   assert returned == correct
