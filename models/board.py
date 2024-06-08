@@ -82,7 +82,7 @@ def build_all_lines(shape: tuple[int], win_length: int):
       line = build_line(shape, start, diff)
       if len(line) >= win_length and line not in lines:
         lines.append(line)
-  return lines
+  return sorted(lines)
 
 def get_start_points(shape: tuple[int]) -> List[tuple[int]]:
   dim_vals = [range(dim) for dim in shape]
@@ -108,6 +108,6 @@ def build_line(shape: tuple[int], start: tuple[int], diffs: tuple[int]):
   
   
 def get_diffs(shape: tuple[int]) -> tuple[tuple[int]]:
-  all_diffs = [(-1,0,1)]*len(shape)
+  all_diffs = product(*[(-1,0,1)]*len(shape))
   full_zero = (0,)*len(shape)
   return tuple([diff for diff in all_diffs if diff != full_zero])
