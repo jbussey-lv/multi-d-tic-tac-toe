@@ -1,5 +1,5 @@
 import pytest
-from models import board
+from models import game
 
 get_start_point_inputs = [
    ((3,3), [(0,0), (0,1), (0,2), 
@@ -23,7 +23,7 @@ get_start_point_inputs = [
 ]
 @pytest.mark.parametrize("shape,expected", get_start_point_inputs)
 def test_get_start_points(shape, expected):
-   returned = board.get_start_points(shape)
+   returned = game.get_start_points(shape)
    assert returned == expected
 
 build_line_inputs = [   
@@ -33,7 +33,7 @@ build_line_inputs = [
 ]
 @pytest.mark.parametrize("shape,start,diffs,expected", build_line_inputs)
 def test_build_line(shape, start, diffs, expected):
-   returned = board.build_line(shape, start, diffs)
+   returned = game.build_line(shape, start, diffs)
    assert returned == expected
 
 build_all_lines_output_inputs = [ 
@@ -91,7 +91,7 @@ build_all_lines_output_inputs = [
 ]
 @pytest.mark.parametrize("shape,win_length,expected", build_all_lines_output_inputs)
 def test_build_all_lines_output(shape, win_length, expected):
-   returned = board.build_all_lines(shape, win_length)
+   returned = game.build_all_lines(shape, win_length)
    assert returned == expected
 
 build_all_lines_len_inputs = [
@@ -103,5 +103,5 @@ build_all_lines_len_inputs = [
 ]
 @pytest.mark.parametrize("shape,win_length,expected", build_all_lines_len_inputs)
 def test_build_all_lines_len(shape, win_length, expected):
-   returned = board.build_all_lines(shape, win_length)
+   returned = game.build_all_lines(shape, win_length)
    assert len(returned) == expected
