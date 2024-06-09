@@ -23,7 +23,7 @@ get_start_point_inputs = [
 ]
 
 @pytest.mark.parametrize("shape,expected", get_start_point_inputs)
-def test_get_start_points_flat(shape, expected):
+def test_get_start_points(shape, expected):
    returned = board.get_start_points(shape)
    assert returned == expected
 
@@ -37,9 +37,8 @@ def test_build_line(shape, start, diffs, expected):
    returned = board.build_line(shape, start, diffs)
    assert returned == expected
 
-def test_build_all_lines_2d():
-   returned = board.build_all_lines((3,3), 3)
-   correct = [
+build_all_line_inputs = [  
+   ((3,3), 3, [
       [(0,0), (0,1), (0,2)],
       [(0,0), (1,0), (2,0)],
       [(0,0), (1,1), (2,2)],
@@ -48,5 +47,20 @@ def test_build_all_lines_2d():
       [(0,2), (1,2), (2,2)],
       [(1,0), (1,1), (1,2)],
       [(2,0), (2,1), (2,2)],
-   ]
-   assert returned == correct
+   ]),
+   ((3,2), 2, [
+      [(0,0), (0,1)],
+      [(0,0), (1,0), (2,0)],
+      [(0,0), (1,1)],
+      [(0,1), (1,0)],
+      [(0,1), (1,1), (2,1)],
+      [(1,0), (1,1)],
+      [(1,0), (2,1)],
+      [(1,1), (2,0)],
+      [(2,0), (2,1)],
+   ])
+]
+@pytest.mark.parametrize("shape,win_length,expected", build_all_line_inputs)
+def test_build_all_lines(shape, win_length, expected):
+   returned = board.build_all_lines(shape, win_length)
+   assert returned == expected

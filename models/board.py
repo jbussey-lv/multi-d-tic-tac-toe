@@ -73,12 +73,20 @@ class Board:
 # print(len(lines))
 # print(lines)
 
+def middle_out(start: tuple[int], diff: tuple[int], shape: tuple[int]) -> bool:
+  for i, val in enumerate(start):
+    if val in [0, shape[i] - 1] and diff[i] != 0:
+      return False
+  return True
+
 def build_all_lines(shape: tuple[int], win_length: int):
   lines = []
   starts = get_start_points(shape)
   diffs = get_diffs(shape)
   for start in starts:
     for diff in diffs:
+      if middle_out(start, diff, shape):
+        continue
       line = build_line(shape, start, diff)
       if len(line) >= win_length and line not in lines:
         lines.append(line)
