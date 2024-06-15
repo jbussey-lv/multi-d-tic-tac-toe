@@ -3,6 +3,8 @@ import itertools
 from itertools import product
 import numpy as np
 
+from models.clump import Clump
+
 class Game:
 
   board = []
@@ -25,21 +27,28 @@ class Game:
   def __str__(self) -> str:
     return str(self.board)
   
-  def add_move(self, move: List[int], player: int) -> None:
+  def add_move(self, move: tuple[int], player: int) -> None:
     self.board[*move] = player
 
+  def get_runs(self):
+    total_runs = get_empty_runs(self.win_length, len(self.players))
+    
+    for sequence in self.get_sequences():
+      sequence_runs = get_runs_from_sequence(sequence, self.win_length, len(self.players))
+      for player, run in enumerate(sequence_runs):
+        for run_length, tally in run.items():
+          total_runs[player][run_length] += tally
+
+    return total_runs
+
+  def get_sequences(self) -> List:
+    return [self.line_to_sequence(line) for line in self.lines]
+
+  def line_to_sequence(self,line):
+    return [self.board[*point] for point in line]
 
 
 
-# board = Board([2,3,4], 4)
-
-# # board.add_move([1,2,3], 'X')
-# # board.add_move([2,3,4], 'Y')
-# # board.add_move([1,0,0], 'X')
-# print(board)
-# lines = board.get_lines()
-# print(len(lines))
-# print(lines)
 
 # get lengths of sequences plus padding on Nones   
 def get_runs_from_sequence(sequence: List, win_length: int, num_players: int) -> Dict[int, List]:
@@ -49,71 +58,51 @@ def get_runs_from_sequence(sequence: List, win_length: int, num_players: int) ->
   clumps = get_clumps(sequence)
 
   for clump in clumps:
-    if clump["head_length"] + clump["run_length"] + clump["tail_length"] >= win_length:
-      runs[clump['active_player']][clump["run_length"]] += 1
+    if clump.get_total_length() >= win_length:
+      run_length = min([clump.run_length, win_length])
+      runs[clump.player][run_length] += 1
 
   return runs
 
 
-def get_clumps(sequence: List):
+def get_clumps(sequence: List) -> List[Clump]:
   start_pos = 0
   clumps = []
   go = True
 
   while start_pos < len(sequence) and go:
-    status = 'head'
-    clump = {
-      'active_player': None,
-      'head_length': 0,
-      'run_length': 0,
-      'tail_length': 0
-    }
+    clump = Clump()
     right_sequence = sequence[start_pos:]
     for i, player in enumerate(right_sequence):
       if i == len(right_sequence)-1:
         go = False
-      if status == "head":
+      if clump.status == "head":
         if player is not None:
-          clump['active_player'] = player
-          clump['run_length'] += 1
-          status = "run"
+          clump.player = player
+          clump.run_length += 1
+          clump.status = "run"
         else:
-          clump['head_length'] += 1
-      elif status == "run":
-        if player == clump['active_player']:
-          clump['run_length'] += 1
+          clump.head_length += 1
+      elif clump.status == "run":
+        if player == clump.player:
+          clump.run_length += 1
         elif player is None:
-          status = "tail"
-          clump['tail_length'] += 1
+          clump.status = "tail"
+          clump.tail_length += 1
         else:
           clumps.append(clump)
-          start_pos = start_pos + clump['head_length'] + clump['run_length']
+          start_pos = start_pos + clump.get_claimed_length()
           break
-      elif status == "tail":
+      elif clump.status == "tail":
         if player is None:
-          clump['tail_length'] += 1
+          clump.tail_length += 1
         else:
           clumps.append(clump)
-          start_pos = start_pos + clump['head_length'] + clump['run_length']
+          start_pos = start_pos + clump.get_claimed_length()
           break
-      if go == False:
+      if go == False and clump.player is not None:
         clumps.append(clump)
   return clumps
-
-    
-  clumps = get_empty_runs(win_length, num_players)
-  count = 0
-  active_player = None
-  for i in range(len(sequence)):
-    curr_spot = sequence[i]
-    prev_spot = sequence[i-1] if i > 0 else None
-    if curr_spot is None:
-      pass
-    elif curr_spot == active_player:
-      pass
-    else:
-      pass
-
 
 
 def get_empty_runs(win_length: int, num_players: int) -> Dict[int, List]:

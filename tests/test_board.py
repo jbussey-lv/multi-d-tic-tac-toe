@@ -114,3 +114,11 @@ def test_get_runs_from_sequence():
 def test_get_empty_runs():
    empty_run = game.get_empty_runs(3, 2)
    assert empty_run == [{1: 0, 2: 0, 3: 0}, {1: 0, 2: 0, 3: 0}]
+
+def test_get_runs():
+   g = game.Game([3,3], 3)
+   g.add_move((0,0), 0)
+   g.add_move((0,1), 0)
+   actual = g.get_runs()
+   expected = [{1: 3, 2: 1, 3: 0}, {1: 0, 2: 0, 3: 0}]
+   assert actual == expected
