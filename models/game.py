@@ -27,6 +27,16 @@ class Game:
   def __str__(self) -> str:
     return str(self.board)
   
+  def run_to_score(self, run):
+    score = 0
+    for run_length, tally in run.items():
+      score += tally * run_length ** run_length
+    return score
+  
+  def get_scores(self):
+    runs = self.get_runs()
+    return [self.run_to_score(run) for run in runs]
+  
   def add_move(self, move: tuple[int], player: int) -> None:
     self.board[*move] = player
 

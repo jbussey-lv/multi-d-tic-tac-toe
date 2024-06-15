@@ -118,7 +118,17 @@ def test_get_empty_runs():
 def test_get_runs():
    g = game.Game([3,3], 3)
    g.add_move((0,0), 0)
+   g.add_move((1,2), 1)
    g.add_move((0,1), 0)
    actual = g.get_runs()
-   expected = [{1: 3, 2: 1, 3: 0}, {1: 0, 2: 0, 3: 0}]
+   expected = [{1: 3, 2: 1, 3: 0}, {1: 2, 2: 0, 3: 0}]
+   assert actual == expected
+
+def test_get_scores():
+   g = game.Game([3,3], 3)
+   g.add_move((0,0), 0)
+   g.add_move((1,2), 1)
+   g.add_move((0,1), 0)
+   actual = g.get_scores()
+   expected = [7, 2]
    assert actual == expected
