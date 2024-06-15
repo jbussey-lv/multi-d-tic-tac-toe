@@ -23,6 +23,22 @@ class Game:
     self.players = players
     self.gravity_dimension = gravity_dimension
     self.lines = build_all_lines(shape, win_length)
+
+  def copy(self):
+    game = Game(self.board.shape, self.win_length, self.players, self.gravity_dimension)
+    game.board = self.board.copy()
+    game.lines = self.lines.copy()
+    return game
+
+  def get_legal_moves(self):
+    return np.argwhere(self.board == None)
+  
+  def is_move_legal(self, move: tuple[int]) -> bool:
+    return self.board[move] == None
+  
+  def whose_turn(self) -> int:
+    move_count = (self.board != None).sum()
+    return move_count % len(self.players)
     
   def __str__(self) -> str:
     return str(self.board)
@@ -37,7 +53,10 @@ class Game:
     runs = self.get_runs()
     return [self.run_to_score(run) for run in runs]
   
-  def add_move(self, move: tuple[int], player: int) -> None:
+  def add_move(self, move: tuple[int]) -> None:
+    player = self.whose_turn()
+    if not self.is_move_legal(move):
+      raise ValueError("Move is not legal")
     self.board[*move] = player
 
   def get_runs(self):
