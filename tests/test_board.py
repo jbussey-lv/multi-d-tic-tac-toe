@@ -105,3 +105,12 @@ build_all_lines_len_inputs = [
 def test_build_all_lines_len(shape, win_length, expected):
    returned = game.build_all_lines(shape, win_length)
    assert len(returned) == expected
+
+def test_get_runs_from_sequence():
+   actual = game.get_runs_from_sequence([None, 1, 1, None, 0, 0, 0, 1, 1], 3, 2)
+   expected = [{1: 0, 2: 0, 3: 1}, {1: 0, 2: 1, 3: 0}]
+   assert actual == expected
+   
+def test_get_empty_runs():
+   empty_run = game.get_empty_runs(3, 2)
+   assert empty_run == [{1: 0, 2: 0, 3: 0}, {1: 0, 2: 0, 3: 0}]

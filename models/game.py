@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 import itertools
 from itertools import product
 import numpy as np
@@ -40,6 +40,91 @@ class Game:
 # lines = board.get_lines()
 # print(len(lines))
 # print(lines)
+
+# get lengths of sequences plus padding on Nones   
+def get_runs_from_sequence(sequence: List, win_length: int, num_players: int) -> Dict[int, List]:
+
+  runs = get_empty_runs(win_length, num_players)
+
+  clumps = get_clumps(sequence)
+
+  for clump in clumps:
+    if clump["head_length"] + clump["run_length"] + clump["tail_length"] >= win_length:
+      runs[clump['active_player']][clump["run_length"]] += 1
+
+  return runs
+
+
+def get_clumps(sequence: List):
+  start_pos = 0
+  clumps = []
+  go = True
+
+  while start_pos < len(sequence) and go:
+    status = 'head'
+    clump = {
+      'active_player': None,
+      'head_length': 0,
+      'run_length': 0,
+      'tail_length': 0
+    }
+    right_sequence = sequence[start_pos:]
+    for i, player in enumerate(right_sequence):
+      if i == len(right_sequence)-1:
+        go = False
+      if status == "head":
+        if player is not None:
+          clump['active_player'] = player
+          clump['run_length'] += 1
+          status = "run"
+        else:
+          clump['head_length'] += 1
+      elif status == "run":
+        if player == clump['active_player']:
+          clump['run_length'] += 1
+        elif player is None:
+          status = "tail"
+          clump['tail_length'] += 1
+        else:
+          clumps.append(clump)
+          start_pos = start_pos + clump['head_length'] + clump['run_length']
+          break
+      elif status == "tail":
+        if player is None:
+          clump['tail_length'] += 1
+        else:
+          clumps.append(clump)
+          start_pos = start_pos + clump['head_length'] + clump['run_length']
+          break
+      if go == False:
+        clumps.append(clump)
+  return clumps
+
+    
+  clumps = get_empty_runs(win_length, num_players)
+  count = 0
+  active_player = None
+  for i in range(len(sequence)):
+    curr_spot = sequence[i]
+    prev_spot = sequence[i-1] if i > 0 else None
+    if curr_spot is None:
+      pass
+    elif curr_spot == active_player:
+      pass
+    else:
+      pass
+
+
+
+def get_empty_runs(win_length: int, num_players: int) -> Dict[int, List]:
+  runs = [None] * num_players
+  for player_num in range(num_players):
+    run = {}
+    for run_length in range(1, win_length + 1):
+      run[run_length] = 0
+    runs[player_num] = run
+  return runs
+    
 
 def is_middle_out(start: tuple[int], diff: tuple[int], shape: tuple[int]) -> bool:
   for i, val in enumerate(start):
