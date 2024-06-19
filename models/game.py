@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Self, Tuple
 import itertools
 from itertools import product
 import numpy as np
@@ -17,24 +17,77 @@ class Game:
                shape: List[int], 
                win_length: int,
                players = ['X', 'O'],
-               gravity_dimension=None) -> None:
+               gravity_dimension=None,
+               lines: List[List[tuple[int]]]|None = None) -> None:
     self.board = np.full(shape, None)
     self.win_length = win_length
     self.players = players
     self.gravity_dimension = gravity_dimension
-    self.lines = build_all_lines(shape, win_length)
+    self.lines = build_all_lines(shape, win_length) if lines is None else lines
 
-  def copy(self):
-    game = Game(self.board.shape, self.win_length, self.players, self.gravity_dimension)
+  def copy(self) -> Self:
+    game = Game(
+      self.board.shape,
+      self.win_length,
+      self.players,
+      self.gravity_dimension,
+      self.lines)
     game.board = self.board.copy()
-    game.lines = self.lines.copy()
+    return game
+  
+  def get_best_move(self, depth: int = 5) -> List[int]:
+    best_move_index, score_set = self.minimax(depth)
+    legal_moves = self.get_legal_moves()
+    best_move = legal_moves[best_move_index]
+    return best_move
+  
+  def minimax(self, depth: int) -> Tuple[int, List[int]]:  
+    if self.is_over() or depth == 0:
+      return (0, self.get_score_set())
+    
+    next_games = self.get_next_games()
+
+    indexed_score_sets = [game.minimax(depth - 1) for game in next_games]
+
+    score_sets = [score_set for index, score_set in indexed_score_sets]
+    return get_preferred_score_set(score_sets, self.whose_turn())
+  
+  def is_over(self):
+    if self.get_winner() is not None:
+      return True
+    if self.get_legal_moves() == []:
+      return True
+    return False
+
+  def get_winner(self) -> int|None:
+    run_sets = self.get_run_sets()
+    for player_num, run_set in enumerate(run_sets):
+      for run_length, count in run_set.items():
+        if count > 0 and run_length >= self.win_length:
+          return player_num
+    return None
+  
+  def get_next_games(self) -> List[Self]:
+    next_games = []
+    for move in self.get_legal_moves():
+      next_games.append(self.copy_with_move(move))
+    return next_games
+
+  def copy_with_move(self, move: tuple[int]) -> Self:
+    game = self.copy()
+    game.add_move(move)
     return game
 
-  def get_legal_moves(self):
-    return np.argwhere(self.board == None)
+  def get_legal_moves(self) -> List[tuple[int]]:
+    legal_moves_np = np.argwhere(self.board == None)
+    return list(map(tuple, legal_moves_np))
   
   def is_move_legal(self, move: tuple[int]) -> bool:
-    return self.board[move] == None
+    if self.board.shape != len(move):
+      return False
+    if self.is_over():
+      return False
+    return self.board[*move] == None
   
   def whose_turn(self) -> int:
     move_count = (self.board != None).sum()
@@ -43,15 +96,15 @@ class Game:
   def __str__(self) -> str:
     return str(self.board)
   
-  def run_to_score(self, run):
+  def run_set_to_score(self, run_set):
     score = 0
-    for run_length, tally in run.items():
+    for run_length, tally in run_set.items():
       score += tally * run_length ** run_length
     return score
-  
-  def get_scores(self):
-    runs = self.get_runs()
-    return [self.run_to_score(run) for run in runs]
+
+  def get_score_set(self) -> List[int]:
+    runs = self.get_run_sets()
+    return [self.run_set_to_score(run) for run in runs]
   
   def add_move(self, move: tuple[int]) -> None:
     player = self.whose_turn()
@@ -59,16 +112,16 @@ class Game:
       raise ValueError("Move is not legal")
     self.board[*move] = player
 
-  def get_runs(self):
-    total_runs = get_empty_runs(self.win_length, len(self.players))
+  def get_run_sets(self) -> List[Dict[int, int]]:
+    run_sets = get_empty_run_sets(self.win_length, len(self.players))
     
     for sequence in self.get_sequences():
       sequence_runs = get_runs_from_sequence(sequence, self.win_length, len(self.players))
       for player, run in enumerate(sequence_runs):
         for run_length, tally in run.items():
-          total_runs[player][run_length] += tally
+          run_sets[player][run_length] += tally
 
-    return total_runs
+    return run_sets
 
   def get_sequences(self) -> List:
     return [self.line_to_sequence(line) for line in self.lines]
@@ -82,7 +135,7 @@ class Game:
 # get lengths of sequences plus padding on Nones   
 def get_runs_from_sequence(sequence: List, win_length: int, num_players: int) -> Dict[int, List]:
 
-  runs = get_empty_runs(win_length, num_players)
+  runs = get_empty_run_sets(win_length, num_players)
 
   clumps = get_clumps(sequence)
 
@@ -134,7 +187,7 @@ def get_clumps(sequence: List) -> List[Clump]:
   return clumps
 
 
-def get_empty_runs(win_length: int, num_players: int) -> Dict[int, List]:
+def get_empty_run_sets(win_length: int, num_players: int) -> Dict[int, List]:
   runs = [None] * num_players
   for player_num in range(num_players):
     run = {}
@@ -190,3 +243,16 @@ def get_diffs(shape: tuple[int]) -> tuple[tuple[int]]:
   all_diffs = product(*[(-1,0,1)]*len(shape))
   full_zero = (0,)*len(shape)
   return tuple([diff for diff in all_diffs if diff != full_zero])
+
+  
+def get_relative_score(score_set: List[int], player: int) -> int:
+  avg_without_player = (sum(score_set) - score_set[player]) / (len(score_set) - 1)
+  return score_set[player] - avg_without_player
+
+def get_preferred_score_set(score_sets: List[List[int]], player: int) -> Tuple[int, List[int]]:
+  relative_scores = [get_relative_score(score_set, player) for score_set in score_sets]
+  max_relative_score = max(relative_scores)
+  max_index = relative_scores.index(max_relative_score)
+  return max_index, score_sets[max_index]
+
+

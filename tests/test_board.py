@@ -112,7 +112,7 @@ def test_get_runs_from_sequence():
    assert actual == expected
    
 def test_get_empty_runs():
-   empty_run = game.get_empty_runs(3, 2)
+   empty_run = game.get_empty_run_sets(3, 2)
    assert empty_run == [{1: 0, 2: 0, 3: 0}, {1: 0, 2: 0, 3: 0}]
 
 def test_get_runs():
@@ -120,16 +120,16 @@ def test_get_runs():
    g.add_move((0,0))
    g.add_move((1,2))
    g.add_move((0,1))
-   actual = g.get_runs()
+   actual = g.get_run_sets()
    expected = [{1: 3, 2: 1, 3: 0}, {1: 2, 2: 0, 3: 0}]
    assert actual == expected
 
-def test_get_scores():
+def test_get_score_set():
    g = game.Game([3,3], 3)
    g.add_move((0,0))
    g.add_move((1,2))
    g.add_move((0,1))
-   actual = g.get_scores()
+   actual = g.get_score_set()
    expected = [7, 2]
    assert actual == expected
 
@@ -139,3 +139,36 @@ def test_whose_turn():
    g.add_move((1,2))
    g.add_move((0,1))
    assert g.whose_turn() == 0
+
+get_relative_scores_inputs = [
+   ([1,2,3], 0, -1.5),
+   ((1,2,3), 2, 1.5),
+   ((1,2,3), 1, 0),
+   ((4,4,4), 0, 0),
+   ((9,2), 0, 7),
+]
+@pytest.mark.parametrize("score_set,player,expected", get_relative_scores_inputs)
+def test_get_relative_score(score_set, player, expected):
+   score_set = [1, 2, 3]
+   player = 0
+   expected = -1.5
+   actual = game.get_relative_score(score_set, player)
+   assert actual == expected
+
+def test_get_preferred_score_set():
+   score_sets = [
+      [1, 2, 3],
+      [2, 1, 3],
+      [3, 2, 1],
+   ]
+   player = 0
+   expected = (2, [3,2,1])
+   actual = game.get_preferred_score_set(score_sets, player)
+   assert actual == expected
+
+def test_get_best_move():
+   g = game.Game([3,3], 3)
+   g.add_move((0,1))
+   actual = g.get_best_move(5)
+   expected = (0,2)
+   assert actual == expected
