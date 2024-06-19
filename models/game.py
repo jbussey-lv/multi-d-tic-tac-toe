@@ -1,3 +1,4 @@
+import math
 from typing import Dict, List, Self, Tuple
 import itertools
 from itertools import product
@@ -25,6 +26,24 @@ class Game:
     self.gravity_dimension = gravity_dimension
     self.lines = build_all_lines(shape, win_length) if lines is None else lines
 
+  def add_move_interactive(self, move: tuple[int]) -> None:
+    if not self.is_move_legal(move):
+      print("Move is not legal")
+      return
+    self.add_move(move)
+    print(self)
+    if self.is_over():
+      print("Game over")
+      return
+    print(self.players[self.whose_turn()], "to move")
+    move = self.get_best_move()
+    self.add_move(move)
+    print(self)
+    if self.is_over():
+      print("Game over")
+      return
+    print(self.players[self.whose_turn()], "to move")
+
   def copy(self) -> Self:
     game = Game(
       self.board.shape,
@@ -35,22 +54,56 @@ class Game:
     game.board = self.board.copy()
     return game
   
-  def get_best_move(self, depth: int = 5) -> List[int]:
-    best_move_index, score_set = self.minimax(depth)
+  def get_best_move(self, depth: int = 7) -> List[int]:
+    worst_relative_scores = [0]*len(self.players)
+    best_move_index, score_set = self.minimax(depth, worst_relative_scores)
     legal_moves = self.get_legal_moves()
     best_move = legal_moves[best_move_index]
     return best_move
   
-  def minimax(self, depth: int) -> Tuple[int, List[int]]:  
+  def get_worst_score_sets(self) -> List[List[int]]:
+    return [self.get_worst_score_set_for_player(player) for player in range(len(self.players))]
+
+  def get_worst_score_set_for_player(self, player: int) -> List[int]:
+    worst_score_set = [math.inf] * len(self.players)
+    worst_score_set[player] = 0
+    return worst_score_set
+
+  def minimax(self, depth: int, worst_relative_scores: List[int]) -> Tuple[int, List[int]]:
+
+    DISCOUNT_FACTOR = 0.9
+
     if self.is_over() or depth == 0:
       return (0, self.get_score_set())
-    
-    next_games = self.get_next_games()
 
-    indexed_score_sets = [game.minimax(depth - 1) for game in next_games]
+    best_relative_score = 0
+    best_move_index = 0
+
+    worst_relative_score = worst_relative_scores[self.whose_turn()]
+    prev_player_worst_relative_score = worst_relative_scores[self.whose_turn_pervious()]
+    
+    for move_index, next_game in enumerate(self.get_next_games()):
+      score_set_index, next_game_score_set = next_game.minimax(depth - 1)
+      next_game_relative_score = get_relative_score(next_game_score_set, self.whose_turn())
+
+      if next_game_relative_score > best_relative_score:
+        best_relative_score = next_game_relative_score
+        best_move_index = move_index
+
+      worst_relative_score = min(worst_relative_score, next_game_relative_score)
+      if worst_relative_score <= best_relative_score:
+        break
+
+      preferred_index, best_option = get_preferred_score_set(
+        [best_option, next_game_score_set], self.whose_turn())
+      
+      worst_relative_scores[self.whose_turn()] = best_option
 
     score_sets = [score_set for index, score_set in indexed_score_sets]
-    return get_preferred_score_set(score_sets, self.whose_turn())
+    preferred_score_set = get_preferred_score_set(score_sets, self.whose_turn())
+    discounted_preferred_score_set = [score * DISCOUNT_FACTOR for score in preferred_score_set[1]]
+
+    return discounted_preferred_score_set
   
   def is_over(self):
     if self.get_winner() is not None:
@@ -89,26 +142,38 @@ class Game:
       return False
     return self.board[*move] == None
   
+  def get_move_count(self) -> int:
+    return (self.board != None).sum()
+  
   def whose_turn(self) -> int:
-    move_count = (self.board != None).sum()
-    return move_count % len(self.players)
+    return self.get_move_count() % len(self.players)
+  
+  def whose_turn_pervious(self) -> int:
+    return (self.get_move_count() - 1) % len(self.players)
     
-  def __str__(self) -> str:
+  def __str__(self) -> None:
     c = np.copy(self.board)
-    c[c == None] = ' '
+    c[c == None] = '.'
     for i, player in enumerate(self.players):
-      c[c ==  i] = player
-    return str(c)
+      c[c == i] = player
+    return np.array2string(c, separator=' ', formatter={'all': lambda c: c})
   
   def run_set_to_score(self, run_set):
     score = 0
     for run_length, tally in run_set.items():
-      score += tally * run_length ** run_length
+      score += tally * (run_length ** run_length)
     return score
 
   def get_score_set(self) -> List[int]:
     runs = self.get_run_sets()
-    return [self.run_set_to_score(run) for run in runs]
+    score_set = [self.run_set_to_score(run) for run in runs]
+    winner = self.get_winner()
+    if winner is not None:
+      for player in range(len(score_set)):
+        if player != winner:
+          score_set[player] = 0
+    return score_set
+  
   
   def add_move(self, move: tuple[int]) -> None:
     player = self.whose_turn()
