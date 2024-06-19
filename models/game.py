@@ -83,7 +83,7 @@ class Game:
     return list(map(tuple, legal_moves_np))
   
   def is_move_legal(self, move: tuple[int]) -> bool:
-    if self.board.shape != len(move):
+    if len(self.board.shape) != len(move):
       return False
     if self.is_over():
       return False
@@ -94,7 +94,11 @@ class Game:
     return move_count % len(self.players)
     
   def __str__(self) -> str:
-    return str(self.board)
+    c = np.copy(self.board)
+    c[c == None] = ' '
+    for i, player in enumerate(self.players):
+      c[c ==  i] = player
+    return str(c)
   
   def run_set_to_score(self, run_set):
     score = 0

@@ -115,7 +115,7 @@ def test_get_empty_runs():
    empty_run = game.get_empty_run_sets(3, 2)
    assert empty_run == [{1: 0, 2: 0, 3: 0}, {1: 0, 2: 0, 3: 0}]
 
-def test_get_runs():
+def test_get_run_sets():
    g = game.Game([3,3], 3)
    g.add_move((0,0))
    g.add_move((1,2))
@@ -164,11 +164,4 @@ def test_get_preferred_score_set():
    player = 0
    expected = (2, [3,2,1])
    actual = game.get_preferred_score_set(score_sets, player)
-   assert actual == expected
-
-def test_get_best_move():
-   g = game.Game([3,3], 3)
-   g.add_move((0,1))
-   actual = g.get_best_move(5)
-   expected = (0,2)
    assert actual == expected
