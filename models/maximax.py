@@ -2,11 +2,11 @@ import math
 from typing import Dict, List
 from models.abstract_game import AbstractGame
 
-def get_best_move(game: AbstractGame, depth: int = 5) -> object:
+def get_best_move(game: AbstractGame, depth: int = 7) -> object:
     _, best_move, _ = maximax(game, depth)
     return best_move
 
-def maximax(game: AbstractGame, depth: int, cache:Dict[AbstractGame,tuple[int, object, AbstractGame]]={}) -> tuple[int, object, AbstractGame]:
+def maximax(game: AbstractGame, depth: int, cache:Dict={}) -> tuple[int, object, AbstractGame]:
     scale_factor = 0.9
     if game.is_game_over() or depth == 0:
         return (depth, None, game)
@@ -14,14 +14,15 @@ def maximax(game: AbstractGame, depth: int, cache:Dict[AbstractGame,tuple[int, o
     max_depth: int
     max_move: object
     max_game: AbstractGame
-    for move in enumerate(game.get_legal_moves()):
+    for move in game.get_legal_moves():
         new_game = game.clone()
         new_game.make_move(move)
-        if new_game in cache:
-            leaf_depth, _, leaf_game = cache[new_game]
+        if new_game.__hash__() in cache:
+            leaf_depth, _, leaf_game = cache[new_game.__hash__()]
+            print(".")
         else:
-            leaf_depth, _, leaf_game = maximax(new_game, depth-1)
-            cache[new_game] = (leaf_depth, None, leaf_game)
+            leaf_depth, _, leaf_game = maximax(new_game, depth-1, cache)
+            cache[new_game.__hash__()] = (leaf_depth, None, leaf_game)
 
         depth_diff = depth - leaf_depth
         relative_score = get_relative_score(leaf_game, game.get_current_player())

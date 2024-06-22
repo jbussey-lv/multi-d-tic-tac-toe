@@ -11,7 +11,6 @@ class NTacToe(AbstractGame):
 
   board: np.ndarray
   win_length: int
-  players: List[str]
   gravity_dimension: int|None
   lines: List[List[tuple[int]]]
   
@@ -27,8 +26,11 @@ class NTacToe(AbstractGame):
     self.gravity_dimension = gravity_dimension
     self.lines = build_all_lines(shape, win_length) if lines is None else lines
 
+    super().__init__(players)
+
   def __hash__(self) -> int:
-    return hash(str(self.board))
+    h: int = hash(str(self.board))
+    return h
   
   def __repr__(self) -> str:
     return self.board.__repr__()
