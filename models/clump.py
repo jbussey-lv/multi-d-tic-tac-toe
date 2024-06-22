@@ -3,7 +3,7 @@
 class Clump():
 
   status = "head"
-  player = None
+  player: int | None = None
   head_length = 0
   run_length = 0
   tail_length = 0
