@@ -29,8 +29,7 @@ class NTacToe(AbstractGame):
     super().__init__(players)
 
   def __hash__(self) -> int:
-    h: int = hash(str(self.board))
-    return h
+    return hash(str(self.board))
   
   def __repr__(self) -> str:
     return self.board.__repr__()
@@ -119,20 +118,35 @@ class NTacToe(AbstractGame):
     return [self.board[*point] for point in line]
 
 
-
+def is_all_none(sequence: List) -> bool:
+  return all([val is None for val in sequence])
 
 # get lengths of sequences plus padding on Nones   
 def get_runs_from_sequence(sequence: List, win_length: int, num_players: int) -> List[Dict[int, int]]:
 
   runs = get_empty_run_sets(win_length, num_players)
 
-  clumps = get_clumps(sequence)
+  if is_all_none(sequence):
+    return runs
+  
+  for i in range(0, len(sequence)-win_length+1):
+    tail_i = i-1
+    head_i = i+win_length
+    chunk = sequence[i:i+win_length]
+    if is_all_none(chunk):
+      continue
 
-  for clump in clumps:
-    if clump.get_total_length() >= win_length:
-      run_length = min([clump.run_length, win_length])
-      if clump.player is not None:
-        runs[clump.player][run_length] += 1
+    denoned_chunk = [val for val in chunk if val is not None]
+
+    denoned_set = set(denoned_chunk)
+    if len(denoned_set) == 1:
+      player = denoned_set.pop()
+      run_length = len(denoned_chunk)
+      if tail_i >= 0 and sequence[tail_i] == player:
+        continue
+      if head_i < len(sequence) and sequence[head_i] == player:
+        continue
+      runs[player][run_length] += 1
 
   return runs
 

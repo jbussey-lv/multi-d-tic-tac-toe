@@ -2,7 +2,7 @@ from models.abstract_game import AbstractGame
 from models.n_tac_toe import NTacToe
 from models.maximax import get_best_move, maximax
 
-n_tac_toe = NTacToe((3,3), 3)
+n_tac_toe = NTacToe((4,4), 3)
 
 print(n_tac_toe)
 
