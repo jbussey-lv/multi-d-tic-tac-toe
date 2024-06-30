@@ -28,11 +28,15 @@ class NTacToe(AbstractGame):
 
     super().__init__(players)
 
-  def __hash__(self) -> int:
-    return hash(str(self.board))
+  def __hash__(self) -> bytes:
+    return self.board.data.tobytes()
   
   def __repr__(self) -> str:
-    return self.board.__repr__()
+    c = np.copy(self.board)
+    c[c == None] = '.'
+    for i, player in enumerate(self.players):
+      c[c == i] = player
+    return np.array2string(c, separator=' ', formatter={'all': lambda c: c}) # type: ignore
 
   def clone(self) -> "NTacToe":
     game = NTacToe(
@@ -142,10 +146,6 @@ def get_runs_from_sequence(sequence: List, win_length: int, num_players: int) ->
     if len(denoned_set) == 1:
       player = denoned_set.pop()
       run_length = len(denoned_chunk)
-      if tail_i >= 0 and sequence[tail_i] == player:
-        continue
-      if head_i < len(sequence) and sequence[head_i] == player:
-        continue
       runs[player][run_length] += 1
 
   return runs

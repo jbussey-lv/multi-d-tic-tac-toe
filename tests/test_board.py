@@ -108,7 +108,7 @@ def test_build_all_lines_len(shape, win_length, expected):
 
 def test_get_runs_from_sequence():
    actual = n_tac_toe.get_runs_from_sequence([None, 1, 1, None, 0, 0, 0, 1, 1], 3, 2)
-   expected = [{1: 0, 2: 0, 3: 1}, {1: 0, 2: 2, 3: 0}]
+   expected = [{1: 0, 2: 1, 3: 1}, {1: 0, 2: 2, 3: 0}]
    assert actual == expected
    
 def test_get_empty_runs():
